@@ -12,7 +12,6 @@ app.use(express.json());
 
 app.use("/companies", companyRoutes);
 
-
 /** 404 handler: matches unmatched routes; raises NotFoundError. */
 app.use(function (req, res, next) {
   throw new NotFoundError();
