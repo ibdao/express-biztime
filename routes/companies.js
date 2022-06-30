@@ -48,8 +48,6 @@ router.post("/", async function (req, res) {
   return res.status(201).json({ company });
 });
 
-module.exports = router;
-
 router.put("/:code", async function (req, res) {
   const { code, name, description } = req.body;
 
