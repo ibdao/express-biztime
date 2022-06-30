@@ -1,4 +1,5 @@
 "use strict";
+
 //kungpaodao:foofoo@localhost
 /** Database setup for BizTime. */
 
