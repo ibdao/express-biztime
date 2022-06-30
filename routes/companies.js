@@ -25,7 +25,7 @@ router.get("/", async function (req, res) {
 
 /** Returns information about a single company in JSON
  *  Returns 404 error if the company does not exist.
- *  Expected: {company: {code, name, description}}
+ *  Expected: {company: {code, name, description, invoices: [id, ...]}}
  */
 
 router.get("/:code", async function (req, res) {
@@ -33,15 +33,22 @@ router.get("/:code", async function (req, res) {
   const result = await db.query(
     `SELECT code, name, description
         FROM companies
-        WHERE code = $1`,
-    [code]
+        WHERE code=$1`, [code]
   );
-
+  
   const company = result.rows[0];
-
   if (result.rows.length === 0) {
     throw new NotFoundError();
   }
+
+  const invResults = await db.query(
+    `SELECT id, amt, paid, add_date, paid_date, comp_code 
+      FROM invoices
+      WHERE comp_code=$1`, [code]
+  );
+
+  company.invoice = invResults.rows[0];
+
 
   return res.json({ company });
 });
@@ -56,13 +63,19 @@ router.post("/", async function (req, res) {
 
   const result = await db.query(
     `INSERT INTO companies (code,name,description)
-        VALUES ($1,$2,$3)
+        VALUES ($1, $2, $3)
         RETURNING code, name, description`,
     [code, name, description]
   );
   const company = result.rows[0];
   return res.status(201).json({ company });
 });
+
+/** Updates information about a company.
+ *  Returns all information about that company. 
+ *  Returns 404 error if the company does not exist.
+ *  Expected: {company: {code, name, description}}
+ */
 
 router.put("/:code", async function (req, res) {
   const { code, name, description } = req.body;
@@ -91,7 +104,6 @@ router.delete("/:code", async function (req, res) {
     `DELETE FROM companies WHERE code = $1 RETURNING code, name, description`,
     [req.params.code]
   );
-  const company = result.rows[0];
 
   if (result.rows.length === 0) {
     throw new NotFoundError();
